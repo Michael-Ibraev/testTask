@@ -10,8 +10,16 @@ export class ImageProcessService {
         const img = await Jimp.read(`./uploads/${file.filename}`);
         for(let scale of scales){
             const clone = _.cloneDeep(img);
-            console.log(`${path.parse(file.originalname).name}_${scale * 100}.jpg created`);
-            clone.scale(scale).write(`./processed/${path.parse(file.originalname).name}_${scale * 100}.jpg`);
+            clone.scale(scale).write(`./processed/${path.parse(file.originalname).name}_${scale * 100}${path.parse(file.originalname).ext}`);
+        }
+    }
+
+    async downScaleByAspect(file: Express.Multer.File):Promise<void>{
+        const scales: number[] = [512, 256, 128, 64];
+        const img = await Jimp.read(`./uploads/${file.filename}`);
+        for(let scale of scales){
+            const clone = _.cloneDeep(img);
+            clone.scaleToFit(scale, Jimp.AUTO).write(`./processed/${path.parse(file.originalname).name}_${scale}${path.parse(file.originalname).ext}`)
         }
     }
 }

@@ -14,4 +14,10 @@ export class AppController{
     downScaleByFactor(@UploadedFile() file: Express.Multer.File){
         return this.appService.downScaleByFactor(file);
     }
+
+    @Post('/down_scale_by_aspect')
+    @UseInterceptors(FileInterceptor('image'))
+    downScaleByAspect(@UploadedFile() file: Express.Multer.File){
+        return this.appService.downScaleByAspect(file)
+    }
 }
