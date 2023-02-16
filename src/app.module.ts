@@ -10,7 +10,7 @@ const fileSorage = diskStorage({
         cb(null, './uploads');
     },
     filename: (req, file, cb) => {
-        cb(null, file.filename + '-' + file.originalname);
+        cb(null, file.originalname);
     }
 });
 
