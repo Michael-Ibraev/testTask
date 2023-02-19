@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { MulterModule } from "@nestjs/platform-express";
 import multer, { diskStorage } from "multer";
-import path from "path";
 import { AppController } from "./app.controller";
-import { ImageProcessService } from "./app.service";
+import { ImageProcessService } from "./image/image.service";
+import { AwsModule } from "./aws/aws.module";
+import { ImageProcessModule } from "./image/image.module";
 
 const fileSorage = diskStorage({
     destination: (req, file, cb) => {
@@ -17,7 +18,9 @@ const fileSorage = diskStorage({
 @Module({
     imports: [MulterModule.register({
         storage: fileSorage
-    })],
+    }), 
+        AwsModule,
+        ImageProcessModule,],
     controllers: [AppController],
     providers: [ImageProcessService]
 })
