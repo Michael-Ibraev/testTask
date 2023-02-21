@@ -13,16 +13,17 @@ export class ImageProcessService {
     constructor(private awsService: AwsService){
     }
 
-    async downScaleByFactor(file: Express.Multer.File):Promise<void>{
+    async downScaleByFactor(bufffer: Buffer, filePath: string):Promise<void>{
+        const fileName = filePath.split('/').pop();
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
-        const img = await (await Jimp.read(`./uploads/${file.filename}`))
+        const img = await (await Jimp.read(filePath))
         img.getBuffer(img.getMIME(), (err, buffer) => {
-            this.awsService.uploadFile(buffer, file.filename, '/processed_by_size/');
+            this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
         });
         for(let factor of factors){
             const clone = _.cloneDeep(img);
             clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
-                this.awsService.uploadFile(buffer, `${path.parse(file.originalname).name}_${factor*100}${path.parse(file.originalname).ext}`, '/processed_by_size/');    
+                this.awsService.uploadFile(bufffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
             })
         }
     }
@@ -44,9 +45,7 @@ export class ImageProcessService {
     }
 
     async convert(files: Express.Multer.File[], convertFilesDto: ConvertFilesDto):Promise<void>{    
-        console.log(files);
         for(const file of files){
-            console.log(file);
             let img = await Jimp.read(`./uploads/${file.filename}`);
 
             //выгрузка оригинала
