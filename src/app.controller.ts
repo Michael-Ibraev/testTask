@@ -30,26 +30,20 @@ export class AppController{
     async downScaleByFactor(@Body() body, @UploadedFile() file: Express.Multer.File): Promise<void>{
         if(body.image != undefined){
             const url: string = body.image;
-            let imgBufferByUrl: Buffer = null;
             const urlSplitted = body.image.split('/');
             const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`
             await fetch(url)
                 .then(res => res.arrayBuffer())
                 .then(buffer => {
-                    imgBufferByUrl = arrayBufferToBuffer(buffer);
-                    fs.writeFile(imgPath, imgBufferByUrl, "binary", (err) => {
+                    fs.writeFile(imgPath, arrayBufferToBuffer(buffer), "binary", (err) => {
                         if(err){
                             console.log(err)
                         }
                     })
                 })
-                // console.log(imgBufferByUrl)
-                // console.log(imgPath)
-            return this.appService.downScaleByFactor(imgBufferByUrl, imgPath);
+            return this.appService.downScaleByFactor(imgPath);
         }else{
-            // console.log(file.buffer)
-            // console.log(file.path)
-            return this.appService.downScaleByFactor(file.buffer, file.path);
+            return this.appService.downScaleByFactor(file.path);
         } 
     }
     @ApiOperation({summary: "Генерация набора файлов с учетом аспекта"})
@@ -57,8 +51,24 @@ export class AppController{
     @UseInterceptors(FileInterceptor('image'))
     @ApiConsumes('multipart/form-data')
     @ApiImplicitFile({name: "image", required: true})
-    downScaleByAspect(@UploadedFile() file: Express.Multer.File){
-        return this.appService.downScaleByAspect(file)
+    async downScaleByAspect(@Body() body, @UploadedFile() file: Express.Multer.File): Promise<void>{
+        if(body.image != undefined){
+            const url: string = body.image;
+            const urlSplitted = body.image.split('/');
+            const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`
+            await fetch(url)
+                .then(res => res.arrayBuffer())
+                .then(buffer => {
+                    fs.writeFile(imgPath, arrayBufferToBuffer(buffer), "binary", (err) => {
+                        if(err){
+                            console.log(err)
+                        }
+                    })
+                })
+            return this.appService.downScaleByAspect(imgPath);
+        }else{
+            return this.appService.downScaleByAspect(file.path);
+        } 
     }
 
     @ApiOperation({summary: "Пакетное конвертирование"})

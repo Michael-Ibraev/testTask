@@ -1,49 +1,25 @@
-import { Inject, Injectable, Res, UploadedFile } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import * as Jimp from "jimp";
 import * as _ from "lodash";
 import * as path from "path";
 import { ConvertFilesDto } from "./dto/convertFilesDto";
 import { AwsService } from "src/aws/aws.service";
-import * as gm from "gm";
-import { buffer } from "stream/consumers";
-import { format } from "path";
+
 
 @Injectable()
 export class ImageProcessService {
     constructor(private awsService: AwsService){
     }
 
-    async downScaleByFactor(buffer: Buffer, filePath: string):Promise<void>{
-        console.log(buffer)
+    async downScaleByFactor(filePath: string):Promise<void>{
         const fileName = filePath.split('/').pop();
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
-        console.log(filePath);
-            let img = await Jimp.read(`./uploads/${fileName}`);
-             img = await Jimp.read(`./uploads/${fileName}`);
-
-        // try {
-        //     const img = await Jimp.read(`./uploads/${fileName}`);
-        //     img.getBuffer(img.getMIME(), (err, buffer) => {
-        //         this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
-        //     });
-        //     for(let factor of factors){
-        //         const clone = _.cloneDeep(img);
-        //         clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
-        //             this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
-        //         })
-        //     }
-        // } catch (error) {
-        //     const img = await Jimp.read(`./uploads/${fileName}`);
-        //     img.getBuffer(img.getMIME(), (err, buffer) => {
-        //         this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
-        //     });
-        //     for(let factor of factors){
-        //         const clone = _.cloneDeep(img);
-        //         clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
-        //             this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
-        //         })
-        //     }
-        // }
+        let img;
+        try {
+            img = await Jimp.read(`./uploads/${fileName}`);
+        } catch (error) {
+            img = await Jimp.read(`./uploads/${fileName}`);
+        }
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
         });
@@ -55,18 +31,23 @@ export class ImageProcessService {
         }
     }
 
-    async downScaleByAspect(file: Express.Multer.File):Promise<void>{
+    async downScaleByAspect(filePath: string):Promise<void>{
+        const fileName = filePath.split('/').pop();
         const sizes: number[] = [512, 256, 128, 64];
-        const img = await Jimp.read(`./uploads/${file.filename}`);
+        let img;
+        try {
+            img = await Jimp.read(`./uploads/${fileName}`);
+        } catch (error) {
+            img = await Jimp.read(`./uploads/${fileName}`);
+        }
         img.getBuffer(img.getMIME(), (err, buffer) => {
-            this.awsService.uploadFile(buffer, file.filename, '/processed_by_aspect/')
+            this.awsService.uploadFile(buffer, fileName, '/processed_by_aspect/')
         })
         const aspect = img.bitmap.width/img.bitmap.height;
-        console.log(aspect);
         for(let size of sizes){
             const clone = _.cloneDeep(img);
             clone.scaleToFit(size*aspect, size).getBuffer(clone.getMIME(), (err, buffer) => {
-                this.awsService.uploadFile(buffer, `${path.parse(file.originalname).name}_${size}${path.parse(file.originalname).ext}`, '/processed_by_aspect/')
+                this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${size}${path.parse(fileName).ext}`, '/processed_by_aspect/')
             })
         }
     }
@@ -104,7 +85,6 @@ export class ImageProcessService {
                 }else if(convertFilesDto.format == 'bmp' || convertFilesDto.format == '.bmp'){
                     //img = img.write(`./uploads/${path.parse(file.filename).name}.bmp`)
                     img._originalMime = 'image/bmp';
-                    console.log(img);
                 }
             }
             //выгрузка обработанных файлов
