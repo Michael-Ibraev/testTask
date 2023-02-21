@@ -75,7 +75,43 @@ export class AppController{
     @Post('/convert')
     @UseInterceptors(AnyFilesInterceptor())
     @ApiImplicitFile({name: "image", required: true})
-    convert(@UploadedFiles() files: Express.Multer.File[], @Body() convertFilesDto: ConvertFilesDto){
-        return this.appService.convert(files, convertFilesDto);
+    async convert(@UploadedFiles() files: Express.Multer.File[], @Body() convertFilesDto: ConvertFilesDto){
+        console.log(convertFilesDto.links)
+        console.log(typeof convertFilesDto.links)
+        console.log(convertFilesDto.links[0])
+
+        let enterPathes: string[];
+
+        convertFilesDto.links.forEach((elem, index) => {
+            enterPathes.push(elem[index]);
+            console.log(enterPathes[index]);
+        })
+
+
+
+
+        const pathes: string[] = null;
+        if(convertFilesDto.links != undefined){
+            for(const path of convertFilesDto.links){
+                const url: string = convertFilesDto.links[path];
+                console.log(convertFilesDto.links[path])
+                const urlSplitted = convertFilesDto.links[path].split('/');
+                const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`;
+                pathes.push(imgPath);
+                await fetch(url)
+                    .then(res => res.arrayBuffer())
+                    .then(buffer => {
+                        fs.writeFile(imgPath, arrayBufferToBuffer(buffer), "binary", (err) => {
+                            if(err){
+                                console.log(err)
+                            }
+                        })
+                    })
+                }
+            
+            return this.appService.convert(pathes, convertFilesDto);
+        }else{
+            return this.appService.downScaleByAspect("file.path");
+        } 
     }
 }

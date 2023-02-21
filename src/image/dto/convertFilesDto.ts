@@ -1,6 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class ConvertFilesDto{
+    @ApiProperty({example: "http://some/link.jpg", description: "Ссылки на исходные файлы"})
+    links: string[];
     @ApiProperty({example: "png", description: "Расширение результирующих файлов"})
     readonly format: string;
     @ApiProperty({example: "50", description: "Качество сжатия файлов"})
