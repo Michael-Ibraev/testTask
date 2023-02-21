@@ -29,18 +29,25 @@ export class AppController{
     @ApiImplicitFile({name: "image", required: true})
     async downScaleByFactor(@Body() body, @UploadedFile() file: Express.Multer.File): Promise<void>{
         if(body.image != undefined){
+            let imgBufferByUrl: Buffer = null;
             const urlSplitted = body.image.split('/');
-            fs.createWriteStream(`./uploads/${urlSplitted[urlSplitted.length - 1]}`);
-            fetch(body.image)
+            const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`
+            await fetch(body.image)
                 .then(res => res.arrayBuffer())
                 .then(buffer => {
-                    this.appService.downScaleByFactor(arrayBufferToBuffer(buffer), `./uploads/${urlSplitted[urlSplitted.length - 1]}`)
+                    imgBufferByUrl = arrayBufferToBuffer(buffer);
+                    fs.writeFile(imgPath, imgBufferByUrl, "binary", (err) => {
+                        if(err){
+                            console.log(err)
+                        }
+                    })
                 })
-            // https.get(body.image, (res) => {
-            //     const buffer = fs.readFileSync(`./uploads/${urlSplitted[urlSplitted.length - 1]}`);
-            //     return this.appService.downScaleByFactor(buffer, `./uploads/${urlSplitted[urlSplitted.length - 1]}`);
-            // })          
+                // console.log(imgBufferByUrl)
+                // console.log(imgPath)
+            return this.appService.downScaleByFactor(imgBufferByUrl, imgPath);
         }else{
+            // console.log(file.buffer)
+            // console.log(file.path)
             return this.appService.downScaleByFactor(file.buffer, file.path);
         } 
     }

@@ -13,17 +13,19 @@ export class ImageProcessService {
     constructor(private awsService: AwsService){
     }
 
-    async downScaleByFactor(bufffer: Buffer, filePath: string):Promise<void>{
+    async downScaleByFactor(buffer: Buffer, filePath: string):Promise<void>{
+        console.log(buffer)
         const fileName = filePath.split('/').pop();
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
-        const img = await (await Jimp.read(filePath))
+        console.log(filePath);
+        const img = await Jimp.read(`./uploads/${fileName}`);
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
         });
         for(let factor of factors){
             const clone = _.cloneDeep(img);
             clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
-                this.awsService.uploadFile(bufffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
+                this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
             })
         }
     }
