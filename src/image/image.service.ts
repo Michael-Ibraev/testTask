@@ -18,7 +18,32 @@ export class ImageProcessService {
         const fileName = filePath.split('/').pop();
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
         console.log(filePath);
-        const img = await Jimp.read(`./uploads/${fileName}`);
+            let img = await Jimp.read(`./uploads/${fileName}`);
+             img = await Jimp.read(`./uploads/${fileName}`);
+
+        // try {
+        //     const img = await Jimp.read(`./uploads/${fileName}`);
+        //     img.getBuffer(img.getMIME(), (err, buffer) => {
+        //         this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
+        //     });
+        //     for(let factor of factors){
+        //         const clone = _.cloneDeep(img);
+        //         clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
+        //             this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
+        //         })
+        //     }
+        // } catch (error) {
+        //     const img = await Jimp.read(`./uploads/${fileName}`);
+        //     img.getBuffer(img.getMIME(), (err, buffer) => {
+        //         this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
+        //     });
+        //     for(let factor of factors){
+        //         const clone = _.cloneDeep(img);
+        //         clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
+        //             this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
+        //         })
+        //     }
+        // }
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
         });

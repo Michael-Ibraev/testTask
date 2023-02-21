@@ -29,10 +29,11 @@ export class AppController{
     @ApiImplicitFile({name: "image", required: true})
     async downScaleByFactor(@Body() body, @UploadedFile() file: Express.Multer.File): Promise<void>{
         if(body.image != undefined){
+            const url: string = body.image;
             let imgBufferByUrl: Buffer = null;
             const urlSplitted = body.image.split('/');
             const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`
-            await fetch(body.image)
+            await fetch(url)
                 .then(res => res.arrayBuffer())
                 .then(buffer => {
                     imgBufferByUrl = arrayBufferToBuffer(buffer);
