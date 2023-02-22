@@ -15,6 +15,7 @@ import { ApiConsumes, ApiOperation } from "@nestjs/swagger";
 import { ApiImplicitFile } from "@nestjs/swagger/dist/decorators/api-implicit-file.decorator";
 import { arrayBuffer, buffer } from "stream/consumers";
 import * as arrayBufferToBuffer from 'arraybuffer-to-buffer'
+import { async } from "rxjs";
 
 
 @Controller('/api')
@@ -76,26 +77,12 @@ export class AppController{
     @UseInterceptors(AnyFilesInterceptor())
     @ApiImplicitFile({name: "image", required: true})
     async convert(@UploadedFiles() files: Express.Multer.File[], @Body() convertFilesDto: ConvertFilesDto){
-        console.log(convertFilesDto.links)
-        console.log(typeof convertFilesDto.links)
-        console.log(convertFilesDto.links[0])
-
-        let enterPathes: string[];
-
-        convertFilesDto.links.forEach((elem, index) => {
-            enterPathes.push(elem[index]);
-            console.log(enterPathes[index]);
-        })
-
-
-
-
-        const pathes: string[] = null;
+        let pathes: string[] = [];
         if(convertFilesDto.links != undefined){
-            for(const path of convertFilesDto.links){
-                const url: string = convertFilesDto.links[path];
-                console.log(convertFilesDto.links[path])
-                const urlSplitted = convertFilesDto.links[path].split('/');
+            let enterPathes: string[] = Array.from(convertFilesDto.links);
+            for (const elem in enterPathes){
+                const url: string = enterPathes[elem];
+                const urlSplitted = enterPathes[elem].split('/');
                 const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`;
                 pathes.push(imgPath);
                 await fetch(url)
@@ -108,10 +95,12 @@ export class AppController{
                         })
                     })
                 }
-            
             return this.appService.convert(pathes, convertFilesDto);
         }else{
-            return this.appService.downScaleByAspect("file.path");
+            for(const file of files){
+                pathes.push(file.path);
+            }
+            return this.appService.convert(pathes, convertFilesDto);
         } 
     }
 }

@@ -16,9 +16,9 @@ export class ImageProcessService {
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
         let img;
         try {
-            img = await Jimp.read(`./uploads/${fileName}`);
+            img = await Jimp.read(filePath);
         } catch (error) {
-            img = await Jimp.read(`./uploads/${fileName}`);
+            img = await Jimp.read(filePath);
         }
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
@@ -36,9 +36,9 @@ export class ImageProcessService {
         const sizes: number[] = [512, 256, 128, 64];
         let img;
         try {
-            img = await Jimp.read(`./uploads/${fileName}`);
+            img = await Jimp.read(filePath);
         } catch (error) {
-            img = await Jimp.read(`./uploads/${fileName}`);
+            img = await Jimp.read(filePath);
         }
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_aspect/')
@@ -53,44 +53,42 @@ export class ImageProcessService {
     }
 
     async convert(pathes: string[], convertFilesDto: ConvertFilesDto):Promise<void>{    
-        for(const path of pathes){
-        //     let img = await Jimp.read(`./uploads/${file.filename}`);
+        for(const imgPath of pathes){
+            const fileName = imgPath.split('/').pop();
+            let img = await Jimp.read(imgPath);
 
-        //     //выгрузка оригинала
-        //     img.getBuffer(img.getMIME(), async (err, buffer) => {
-        //         await this.awsService.uploadFile(buffer, file.filename, '/converted/');
-        //     })
+            //выгрузка оригинала
+            img.getBuffer(img.getMIME(), async (err, buffer) => {
+                await this.awsService.uploadFile(buffer, fileName, '/converted/');
+            })
             
-        //     //изменение качества
-        //     if(convertFilesDto.quality != undefined){
-        //         img.quality(+convertFilesDto.quality).write(`./uploads/${file.filename}`);
-        //     }
-        //     //изменение размера
-        //     if(convertFilesDto.size != undefined){
-        //         img.scale(+convertFilesDto.size).write(`./uploads/${file.filename}`);
-        //     }
-        //     //изменение размера по аспекту
-        //     if(convertFilesDto.pct_size != undefined){
-        //         const aspect = img.bitmap.width/img.bitmap.height;
-        //         img.scaleToFit(+convertFilesDto.pct_size * aspect, +convertFilesDto.pct_size).write(`./uploads/${file.filename}`);
-        //     }
-        //     //изменение расширениея
-        //     if(convertFilesDto.format != undefined){
-        //         if(convertFilesDto.format == 'jpg' || convertFilesDto.format == '.jpg'){
-        //             //img = img.write(`./uploads/${path.parse(file.filename).name}.jpg`)
-        //             img._originalMime = Jimp.MIME_JPEG
-        //         }else if(convertFilesDto.format == 'png' || convertFilesDto.format == '.png'){
-        //             //img = img.write(`./uploads/${path.parse(file.filename).name}.png`)
-        //             img._originalMime = Jimp.MIME_PNG;
-        //         }else if(convertFilesDto.format == 'bmp' || convertFilesDto.format == '.bmp'){
-        //             //img = img.write(`./uploads/${path.parse(file.filename).name}.bmp`)
-        //             img._originalMime = 'image/bmp';
-        //         }
-        //     }
-        //     //выгрузка обработанных файлов
-        //         img.getBuffer(img.getMIME(), async (err, buffer) => {
-        //         await this.awsService.uploadFile(buffer, `${path.parse(file.originalname).name}_converted.${img.getExtension()}`, '/converted/');
-        //     })
-         }
+            //изменение качества
+            if(convertFilesDto.quality != undefined){
+                img.quality(+convertFilesDto.quality).write(imgPath);
+            }
+            //изменение размера
+            if(convertFilesDto.size != undefined){
+                img.scale(+convertFilesDto.size).write(imgPath);
+            }
+            //изменение размера по аспекту
+            if(convertFilesDto.pct_size != undefined){
+                const aspect = img.bitmap.width/img.bitmap.height;
+                img.scaleToFit(+convertFilesDto.pct_size * aspect, +convertFilesDto.pct_size).write(imgPath);
+            }
+            //изменение расширениея
+            if(convertFilesDto.format != undefined){
+                if(convertFilesDto.format == 'jpg' || convertFilesDto.format == '.jpg'){
+                    img._originalMime = Jimp.MIME_JPEG
+                }else if(convertFilesDto.format == 'png' || convertFilesDto.format == '.png'){
+                    img._originalMime = Jimp.MIME_PNG;
+                }else if(convertFilesDto.format == 'bmp' || convertFilesDto.format == '.bmp'){
+                    img._originalMime = 'image/bmp';
+                }
+            }
+            //выгрузка обработанных файлов
+                img.getBuffer(img.getMIME(), async (err, buffer) => {
+                await this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_converted.${img.getExtension()}`, '/converted/');
+            })
+          }
     }
 }
