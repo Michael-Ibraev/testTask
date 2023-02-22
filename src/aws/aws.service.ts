@@ -1,7 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { S3 } from "aws-sdk"; 
 import EasyYandexS3 from "easy-yandex-s3";
-import path, { resolve } from "path";
 require('dotenv').config()
 
 @Injectable()
@@ -13,7 +11,7 @@ export class AwsService{
       accessKeyId: process.env.ACCESS_KEY_ID,
       secretAccessKey: process.env.SECRET_ACCESS_KEY,
     },
-    Bucket: 'test-task-bucket',
+    Bucket: process.env.BUCKET,
     debug: false,
 
   });
@@ -25,6 +23,6 @@ export class AwsService{
         buffer: fileBuffer,
         name: fileName
     }, bucketPath);
-    console.log(upload); 
+    console.log(upload);
   }
 }

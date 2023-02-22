@@ -14,12 +14,7 @@ export class ImageProcessService {
     async downScaleByFactor(filePath: string):Promise<void>{
         const fileName = filePath.split('/').pop();
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
-        let img;
-        try {
-            img = await Jimp.read(filePath);
-        } catch (error) {
-            img = await Jimp.read(filePath);
-        }
+        const img = await Jimp.read(filePath);
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
         });
@@ -34,12 +29,7 @@ export class ImageProcessService {
     async downScaleByAspect(filePath: string):Promise<void>{
         const fileName = filePath.split('/').pop();
         const sizes: number[] = [512, 256, 128, 64];
-        let img;
-        try {
-            img = await Jimp.read(filePath);
-        } catch (error) {
-            img = await Jimp.read(filePath);
-        }
+        const img = await Jimp.read(filePath);
         img.getBuffer(img.getMIME(), (err, buffer) => {
             this.awsService.uploadFile(buffer, fileName, '/processed_by_aspect/')
         })
@@ -89,6 +79,6 @@ export class ImageProcessService {
                 img.getBuffer(img.getMIME(), async (err, buffer) => {
                 await this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_converted.${img.getExtension()}`, '/converted/');
             })
-          }
+        }
     }
 }

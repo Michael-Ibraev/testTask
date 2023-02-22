@@ -1,21 +1,13 @@
-import { Body, Controller, Get, Post, UploadedFile, UploadedFiles, UseInterceptors, Req, Param } from "@nestjs/common";
+import { Body, Controller, Post, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { AnyFilesInterceptor, FileInterceptor } from "@nestjs/platform-express";
 import { AwsService } from "./aws/aws.service";
-import { diskStorage } from "multer";
 import { ImageProcessService } from "./image/image.service";
 import { ConvertFilesDto } from "./image/dto/convertFilesDto";
-import { request } from "http";
 import * as fs from "fs";
-import path from "path";
-import * as axios from "axios";
-import { writer } from "repl";
-import Jimp from "jimp/*";
-import * as https from "https"
 import { ApiConsumes, ApiOperation } from "@nestjs/swagger";
 import { ApiImplicitFile } from "@nestjs/swagger/dist/decorators/api-implicit-file.decorator";
-import { arrayBuffer, buffer } from "stream/consumers";
 import * as arrayBufferToBuffer from 'arraybuffer-to-buffer'
-import { async } from "rxjs";
+
 
 
 @Controller('/api')
@@ -36,11 +28,7 @@ export class AppController{
             await fetch(url)
                 .then(res => res.arrayBuffer())
                 .then(buffer => {
-                    fs.writeFile(imgPath, arrayBufferToBuffer(buffer), "binary", (err) => {
-                        if(err){
-                            console.log(err)
-                        }
-                    })
+                    fs.writeFileSync(imgPath, arrayBufferToBuffer(buffer));
                 })
             return this.appService.downScaleByFactor(imgPath);
         }else{
@@ -60,11 +48,7 @@ export class AppController{
             await fetch(url)
                 .then(res => res.arrayBuffer())
                 .then(buffer => {
-                    fs.writeFile(imgPath, arrayBufferToBuffer(buffer), "binary", (err) => {
-                        if(err){
-                            console.log(err)
-                        }
-                    })
+                    fs.writeFileSync(imgPath, arrayBufferToBuffer(buffer));
                 })
             return this.appService.downScaleByAspect(imgPath);
         }else{
@@ -88,11 +72,7 @@ export class AppController{
                 await fetch(url)
                     .then(res => res.arrayBuffer())
                     .then(buffer => {
-                        fs.writeFile(imgPath, arrayBufferToBuffer(buffer), "binary", (err) => {
-                            if(err){
-                                console.log(err)
-                            }
-                        })
+                        fs.writeFileSync(imgPath, arrayBufferToBuffer(buffer));
                     })
                 }
             return this.appService.convert(pathes, convertFilesDto);
