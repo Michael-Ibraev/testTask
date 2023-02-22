@@ -1,19 +1,19 @@
-## Installation
+## Установка
 
-```bash
-$ npm install
+```
+git clone https://github.com/Michael-Ibraev/testTask.git
+cd testTask
+npm install
 ```
 
-## Running the app
+## Запуск
 
-```bash
-# development
-$ npm run start
+```
+npm run start:dev
+```
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+## REST API Документация (Swagger UI)
+```
+http://localhost:5000/api/docs#/
 ```
 
