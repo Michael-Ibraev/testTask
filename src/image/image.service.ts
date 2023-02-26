@@ -11,46 +11,47 @@ export class ImageProcessService {
     constructor(private awsService: AwsService){
     }
 
-    async downScaleByFactor(filePath: string):Promise<void>{
+    async downScaleByFactor(filePath: string):Promise<any>{
         const fileName = filePath.split('/').pop();
         const factors: number[] = [0.8, 0.6, 0.4, 0.2];
         const img = await Jimp.read(filePath);
-        img.getBuffer(img.getMIME(), (err, buffer) => {
-            this.awsService.uploadFile(buffer, fileName, '/processed_by_size/');
-        });
+        const urls: string[] = [];
+        urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()), fileName, '/processed_by_size/'))
         for(let factor of factors){
             const clone = _.cloneDeep(img);
-            clone.scale(factor).getBuffer(clone.getMIME(), (err, buffer) => {
-                this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`, '/processed_by_size/');    
-            })
+            await clone.scale(factor);
+            urls.push(await this.awsService.uploadFile(await clone.getBufferAsync(clone.getMIME()),
+             `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`,
+              '/processed_by_size/'))
         }
+        return urls;
     }
 
-    async downScaleByAspect(filePath: string):Promise<void>{
+    async downScaleByAspect(filePath: string):Promise<any>{
         const fileName = filePath.split('/').pop();
         const sizes: number[] = [512, 256, 128, 64];
         const img = await Jimp.read(filePath);
-        img.getBuffer(img.getMIME(), (err, buffer) => {
-            this.awsService.uploadFile(buffer, fileName, '/processed_by_aspect/')
-        })
+        const urls: string[] = [];
+        urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()), fileName, '/processed_by_aspect/'))
         const aspect = img.bitmap.width/img.bitmap.height;
         for(let size of sizes){
             const clone = _.cloneDeep(img);
-            clone.scaleToFit(size*aspect, size).getBuffer(clone.getMIME(), (err, buffer) => {
-                this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_${size}${path.parse(fileName).ext}`, '/processed_by_aspect/')
-            })
+            clone.scaleToFit(size*aspect, size);
+            urls.push(await this.awsService.uploadFile(await clone.getBufferAsync(clone.getMIME()),
+            `${path.parse(fileName).name}_${size}${path.parse(fileName).ext}`,
+            '/processed_by_aspect/'))
         }
+        return urls;
     }
 
-    async convert(pathes: string[], convertFilesDto: ConvertFilesDto):Promise<void>{    
+    async convert(pathes: string[], convertFilesDto: ConvertFilesDto):Promise<any>{  
+        const urls: string[] = [];  
         for(const imgPath of pathes){
             const fileName = imgPath.split('/').pop();
             let img = await Jimp.read(imgPath);
 
             //выгрузка оригинала
-            img.getBuffer(img.getMIME(), async (err, buffer) => {
-                await this.awsService.uploadFile(buffer, fileName, '/converted/');
-            })
+            urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()), fileName, '/converted/'))
             
             //изменение качества
             if(convertFilesDto.quality != undefined){
@@ -76,9 +77,11 @@ export class ImageProcessService {
                 }
             }
             //выгрузка обработанных файлов
-                img.getBuffer(img.getMIME(), async (err, buffer) => {
-                await this.awsService.uploadFile(buffer, `${path.parse(fileName).name}_converted.${img.getExtension()}`, '/converted/');
-            })
+
+            urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()),
+                `${path.parse(fileName).name}_converted.${img.getExtension()}`,
+                '/converted/'))
         }
+        return urls;
     }
 }

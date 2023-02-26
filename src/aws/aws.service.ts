@@ -19,10 +19,11 @@ export class AwsService{
 }
 
   async uploadFile(fileBuffer: Buffer, fileName: string, bucketPath: string){
-    const upload = await this.s3.Upload({
+    const upload: any = await this.s3.Upload({
         buffer: fileBuffer,
         name: fileName
     }, bucketPath);
-    console.log(upload);
+    const location = upload.Location;
+    return location;
   }
 }

@@ -8,8 +8,6 @@ import { ApiConsumes, ApiOperation } from "@nestjs/swagger";
 import { ApiImplicitFile } from "@nestjs/swagger/dist/decorators/api-implicit-file.decorator";
 import * as arrayBufferToBuffer from 'arraybuffer-to-buffer'
 
-
-
 @Controller('/api')
 export class AppController{
 
@@ -35,6 +33,7 @@ export class AppController{
             return this.appService.downScaleByFactor(file.path);
         } 
     }
+    
     @ApiOperation({summary: "Генерация набора файлов с учетом аспекта"})
     @Post('/downscale/aspect')
     @UseInterceptors(FileInterceptor('image'))
