@@ -11,49 +11,7 @@ import * as arrayBufferToBuffer from 'arraybuffer-to-buffer'
 @Controller('/api')
 export class AppController{
 
-    constructor(private appService: ImageProcessService, private awsService: AwsService){}
-
-    @ApiOperation({summary: "Генерация набора файлов по процентам от текущего размера"})
-    @Post('/downscale')
-    @UseInterceptors(FileInterceptor('image'))
-    @ApiConsumes('multipart/form-data')
-    @ApiImplicitFile({name: "image", required: true})
-    async downScaleByFactor(@Body() body, @UploadedFile() file: Express.Multer.File): Promise<void>{
-        if(body.image != undefined){
-            const url: string = body.image;
-            const urlSplitted = body.image.split('/');
-            const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`
-            await fetch(url)
-                .then(res => res.arrayBuffer())
-                .then(buffer => {
-                    fs.writeFileSync(imgPath, arrayBufferToBuffer(buffer));
-                })
-            return this.appService.downScaleByFactor(imgPath);
-        }else{
-            return this.appService.downScaleByFactor(file.path);
-        } 
-    }
-    
-    @ApiOperation({summary: "Генерация набора файлов с учетом аспекта"})
-    @Post('/downscale/aspect')
-    @UseInterceptors(FileInterceptor('image'))
-    @ApiConsumes('multipart/form-data')
-    @ApiImplicitFile({name: "image", required: true})
-    async downScaleByAspect(@Body() body, @UploadedFile() file: Express.Multer.File): Promise<void>{
-        if(body.image != undefined){
-            const url: string = body.image;
-            const urlSplitted = body.image.split('/');
-            const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`
-            await fetch(url)
-                .then(res => res.arrayBuffer())
-                .then(buffer => {
-                    fs.writeFileSync(imgPath, arrayBufferToBuffer(buffer));
-                })
-            return this.appService.downScaleByAspect(imgPath);
-        }else{
-            return this.appService.downScaleByAspect(file.path);
-        } 
-    }
+    constructor(private appService: ImageProcessService){}
 
     @ApiOperation({summary: "Пакетное конвертирование"})
     @Post('/convert')
@@ -67,6 +25,7 @@ export class AppController{
                 const url: string = enterPathes[elem];
                 const urlSplitted = enterPathes[elem].split('/');
                 const imgPath = `./uploads/${urlSplitted[urlSplitted.length - 1]}`;
+                console.log(`"${urlSplitted[urlSplitted.length - 1]}" downloading...`)
                 pathes.push(imgPath);
                 await fetch(url)
                     .then(res => res.arrayBuffer())
@@ -77,6 +36,7 @@ export class AppController{
             return this.appService.convert(pathes, convertFilesDto);
         }else{
             for(const file of files){
+                console.log(`"${file.filename}" downloading...`);
                 pathes.push(file.path);
             }
             return this.appService.convert(pathes, convertFilesDto);

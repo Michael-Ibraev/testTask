@@ -1,9 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import * as Jimp from "jimp";
 import * as _ from "lodash";
 import * as path from "path";
 import { ConvertFilesDto } from "./dto/convertFilesDto";
 import { AwsService } from "src/aws/aws.service";
+import { error } from "console";
 
 
 @Injectable()
@@ -11,48 +12,32 @@ export class ImageProcessService {
     constructor(private awsService: AwsService){
     }
 
-    async downScaleByFactor(filePath: string):Promise<any>{
-        const fileName = filePath.split('/').pop();
-        const factors: number[] = [0.8, 0.6, 0.4, 0.2];
-        const img = await Jimp.read(filePath);
-        const urls: string[] = [];
-        urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()), fileName, '/processed_by_size/'))
-        for(let factor of factors){
-            const clone = _.cloneDeep(img);
-            await clone.scale(factor);
-            urls.push(await this.awsService.uploadFile(await clone.getBufferAsync(clone.getMIME()),
-             `${path.parse(fileName).name}_${factor*100}${path.parse(fileName).ext}`,
-              '/processed_by_size/'))
-        }
-        return urls;
-    }
-
-    async downScaleByAspect(filePath: string):Promise<any>{
-        const fileName = filePath.split('/').pop();
-        const sizes: number[] = [512, 256, 128, 64];
-        const img = await Jimp.read(filePath);
-        const urls: string[] = [];
-        urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()), fileName, '/processed_by_aspect/'))
-        const aspect = img.bitmap.width/img.bitmap.height;
-        for(let size of sizes){
-            const clone = _.cloneDeep(img);
-            clone.scaleToFit(size*aspect, size);
-            urls.push(await this.awsService.uploadFile(await clone.getBufferAsync(clone.getMIME()),
-            `${path.parse(fileName).name}_${size}${path.parse(fileName).ext}`,
-            '/processed_by_aspect/'))
-        }
-        return urls;
-    }
 
     async convert(pathes: string[], convertFilesDto: ConvertFilesDto):Promise<any>{  
         const urls: string[] = [];  
         for(const imgPath of pathes){
             const fileName = imgPath.split('/').pop();
-            let img = await Jimp.read(imgPath);
+            console.log(`"${fileName}" uploading...`);
+            let img = null;
+
+            try{
+                const extension: string[] = ['.jpeg', '.jpg', '.png', '.bmp'];
+                console.log(path.parse(imgPath).ext)
+                if(!extension.includes(path.parse(imgPath).ext)){
+                throw new HttpException({
+                    status: HttpStatus.BAD_REQUEST,
+                    error: "Unsupported file format"
+                }, HttpStatus.BAD_REQUEST);
+            }
+            img = await Jimp.read(imgPath);
+            } catch(error){
+                console.log(error);
+                throw error
+            }
 
             //выгрузка оригинала
             urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()), fileName, '/converted/'))
-            
+            console.log(`"${fileName}" processing...`);
             //изменение качества
             if(convertFilesDto.quality != undefined){
                 img.quality(+convertFilesDto.quality).write(imgPath);
@@ -77,11 +62,12 @@ export class ImageProcessService {
                 }
             }
             //выгрузка обработанных файлов
-
+            console.log(`"${fileName}_converted" uploading...`);
             urls.push(await this.awsService.uploadFile(await img.getBufferAsync(img.getMIME()),
                 `${path.parse(fileName).name}_converted.${img.getExtension()}`,
                 '/converted/'))
         }
+
         return urls;
     }
 }
